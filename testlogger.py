@@ -16,14 +16,15 @@ class TestLogger():
     def CreateTable(self, name ,fields=[()]):
         cmd = '''CREATE TABLE '''
         cmd = cmd + name + " ("
-        for field in fields: 
-            n,t = field
-            cmd = cmd + " " + n + " " + t
-            if field != fields[-1]:
-                cmd = cmd + ','
+        if(len(fields) > 0):
+            for field in fields: 
+                n,t = field
+                cmd = cmd + " " + n + " " + t
+                if field != fields[-1]:
+                    cmd = cmd + ','
 
         cmd = cmd + ')' 
-        print cmd
+        #print cmd
 
         self.dbCursor.execute(cmd)
         self.connection.commit()
@@ -67,15 +68,16 @@ class TestLogger():
 
 
     def CheckFieldExists(self,table,field):
-        cmd = '''SELECT name FROM ''' + table + '''  WHERE name=?'''
-        self.dbCursor.execute(cmd,(field,))
-        ret = self.dbCursor.fetchone()
+        cmd = '''PRAGMA table_info('''+str(table)+''')'''
+        self.dbCursor.execute(cmd)
+        ret = self.dbCursor.fetchall()
         
-        if (ret == None):
-            return -1
-
-        else:
-            return 0 
+        for r in ret:
+            if field in r:
+                print field
+                return 0
+ 
+        return -1 
 
     def AddField(self,table,field=(),default='NULL'):
         cmd = '''ALTER TABLE ''' + str(table) + ''' ADD ''' + str(field[0]) + \
@@ -90,10 +92,10 @@ if __name__ == "__main__":
     #fields = [('item','text'),('type','text')]
     #testlog.CreateTable('example',fields)  
     #testlog.InsertRow('example',('1','2'))
-    ret = testlog.CheckFieldExists('master_test_record','name')
+    ret = testlog.CheckFieldExists('powerapp_statistics','name')
     print ret
 
     ret = testlog.CheckFieldExists('master_test_record','blah')
     print ret 
 
-    testlog.AddField('testtable',('jello','text'),'NULL') 
+    #testlog.AddField('testtable',('jello','text'),'NULL') 
