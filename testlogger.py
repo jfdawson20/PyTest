@@ -85,7 +85,47 @@ class TestLogger():
 
         self.dbCursor.execute(cmd)
         return 0 
-        
+    
+    def GetField(self,table,field,keyname,key):
+        cmd = '''SELECT ''' + str(field) + ''' FROM ''' + str(table) + \
+              ''' WHERE ''' + str(keyname) + ''' = ?'''
+       
+        print cmd
+        self.dbCursor.execute(cmd,(key,))
+        ret = self.dbCursor.fetchone()
+        print ret
+        ret = str(ret[0])
+        return ret
+
+   
+    def GetFields(self,table,keyname=None,key=None):
+        if(keyname != None):
+            cmd = '''SELECT * FROM ''' + str(table) + \
+                ''' WHERE ''' + str(keyname) + ''' = ?'''
+
+            self.dbCursor.execute(cmd,(key,))
+            data = self.dbCursor.fetchall()
+
+        else:
+            cmd = '''SELECT * FROM ''' + str(table)
+            self.dbCursor.execute(cmd)
+            data = self.dbCursor.fetchall() 
+
+        cmd = '''PRAGMA table_info('''+str(table)+''')'''
+        self.dbCursor.execute(cmd)
+        headers = self.dbCursor.fetchall()
+
+        records = []
+        i = 0
+        for rows in data:
+            tmp=[]
+            i = 0
+            for items in rows: 
+                tmp.append((headers[i][1],items))
+                i = i + 1
+            records.append(tmp)
+
+        return records  
 
 if __name__ == "__main__":
     testlog = TestLogger('pytest.db')
@@ -98,4 +138,11 @@ if __name__ == "__main__":
     ret = testlog.CheckFieldExists('master_test_record','blah')
     print ret 
 
+    ret = testlog.GetFields('master_test_record','name','powerapp')
+    for record in ret:
+        print "------------ New Record ------------"
+        for pair in record:
+            print "Field: " + str(pair[0])
+            print "Value: " + str(pair[1])
+        print"\n\n"
     #testlog.AddField('testtable',('jello','text'),'NULL') 

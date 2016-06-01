@@ -1,7 +1,6 @@
 #!/usr/bin/python 
 
-import os 
-import sqlite3 
+import os  
 import time 
 import datetime
 from testlogger import TestLogger
@@ -13,26 +12,27 @@ class PyTest():
         self.statistics     = []
         self.resultHeader   = []
         self.resultData     = []
+
+        #fixed test parameters for all types of tests
         self.name           = name
         self.serial         = serial
-        self.mkey           = name + "_"+serial
+        self.bachNumber     = 0 
+        self.startDate      = str(datetime.datetime.now()).split(" ")[0]
+        self.startTime      = str(datetime.datetime.now()).split(" ")[1]
+        self.mkey           = str(name + "_"+serial)
+        self.result         = 'incomplete'
 
-	#Initialize database connection
+        #store fixed test parameters in parameter list
+        self.parameters.append(('mkey',self.mkey))
+        self.parameters.append(('name',self.name))
+        self.parameters.append(('serial',self.serial))
+        self.parameters.append(('startDate',self.startDate))
+        self.parameters.append(('startTime',self.startTime))
+        self.parameters.append(('result',self.result))
+	
+       	#Initialize database connection
         self.logger = TestLogger(db)
 
-        #set mkey 
-        self.parameters.append(('mkey',str(self.mkey)))
-        #set test name param
-        self.parameters.append(('name',str(name)))
-        
-        #log initial time and date 
-        self.parameters.append(('startDate',str(datetime.datetime.now()).split(" ")[0]))
-        self.parameters.append(('startTime',str(datetime.datetime.now()).split(" ")[1]))
-            
-	#test result parameter
-        self.parameters.append(('result','incomplete'))
-	
-        
         #check if mtr exists in database, create it if its not found 
         if (self.logger.CheckTableExists('master_test_record') == -1):
             fields = []
@@ -41,8 +41,8 @@ class PyTest():
                 fields.append((name,'text'))
             
             #create master test record table
-            self.logger.CreateTable('master_test_record',fields)
-    
+            self.logger.CreateTable('master_test_record',fields)        
+
                 
     def CreateParam(self,param,value):
         self.parameters.append((str(param),str(value)))
@@ -127,6 +127,8 @@ class PyTest():
         for params in self.parameters:
             fields.append(params[0])    
             vals.append(params[1])
+            
+            #check if field exists in table, if not add it
             ret = self.logger.CheckFieldExists('master_test_record',str(params[0]))
             if (ret == -1):
                 self.logger.AddField('master_test_record',(params[0],'text'))
@@ -144,6 +146,8 @@ class PyTest():
         for stats in self.statistics:
             fields.append(stats[0])    
             vals.append(stats[1])
+
+            #check if field exists in table, if not add it
             ret = self.logger.CheckFieldExists(self.name+'_statistics',str(stats[0]))
             if (ret == -1):
                 self.logger.AddField(self.name+'_statistics',(stats[0],'text'))
@@ -161,6 +165,7 @@ class PyTest():
             self.logger.CreateTable(self.name+'_data',[('mkey','text')])
 
         for data in self.resultHeader:
+            #check if field exists in table, if not add it
             ret = self.logger.CheckFieldExists(self.name+'_data',str(data))
             if (ret == -1):
                 self.logger.AddField(self.name+'_data',(data,'text'))
@@ -168,8 +173,27 @@ class PyTest():
         for data in self.resultData:
             temp = [self.mkey]
             temp = temp + data
-            self.logger.InsertRow(self.name+'_data',temp)     
-        
+            self.logger.InsertRow(self.name+'_data',temp)
+
+    def DumpTestDatabase(self):
+        if (self.logger.CheckTestTypeExists(self.name) == -1):
+            return -1 
+
+        else:
+            #dump mtr
+            mtr_entries = self.logger.GetFields('master_test_record','name',self.name)
+            print mtr_entries
+            print "\n\n"
+
+            #dump test stats
+            stats_entries = self.logger.GetFields(self.name+"_statistics")
+            print stats_entries
+
+            print "\n\n"
+            #dump test data
+            data_entries = self.logger.GetFields(self.name+"_data")
+            print data_entries
+        return 0
 if __name__ == "__main__":
 
     mytest = PyTest('powerapp','AMDA0096-0001-150604223')
@@ -195,3 +219,4 @@ if __name__ == "__main__":
 
     mytest.DisplayTestSummary()
     mytest.PushTestResults()
+    mytest.DumpTestDatabase()
