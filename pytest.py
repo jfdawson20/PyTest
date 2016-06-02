@@ -222,11 +222,7 @@ if __name__ == "__main__":
     mytest.CreateParameter('board_serial','AMDA0099-0001-15234423','Board Serial')
     mytest.CreateParameter('nfp_bsp','nfp-bsp-release-2015.11','bsp version')
 
-    params = mytest.GetParams()
-    for p in params: 
-        print p
-
-    dataHeader = ["timestamp","nfp_temp","nfp_power","card_power","system_power"]
+    dataHeader = ["timestamp","nfp_temp","nfp_power","card_power","system_power","hello","11111111","22222222","333333333"]
     mytest.SetDataHeader(dataHeader)
 
     for i in range(10):
@@ -235,13 +231,12 @@ if __name__ == "__main__":
         nfp_power = i*1.1
         card_power = i*1.4
         system_power = i*3.3
+        hello  = 1
+        a1 = i
+        a2 = i
+        a3 = i
     
-        data = [timestamp,nfp_temp,nfp_power,card_power,system_power]
+        data = [timestamp,nfp_temp,nfp_power,card_power,system_power,hello,a1,a2,a3]
         mytest.WriteDataLine(data)
-
-    #data = mytest.GetData()
-    #print data
-    #for d in data: 
-    #    print d
 
     mytest.DisplayTestResults()
