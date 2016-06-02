@@ -3,220 +3,245 @@
 import os  
 import time 
 import datetime
-from testlogger import TestLogger
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import Column, Integer, String
 
 class PyTest(): 
-    def __init__(self,name,serial,db='pytest.db'):
-		#initialize test variables 
-        self.parameters     = []
-        self.statistics     = []
-        self.resultHeader   = []
-        self.resultData     = []
+	Base   = declarative_base() 
+	def __init__(self,name,desc,result='not_available',batch=-1):
+                #setup database connection and session 
+		self.engine  = create_engine('sqlite:///' + name + '.db', echo=False)
+		self.Session = sessionmaker()
+		self.Session.configure(bind=self.engine)
+		self.session = self.Session()
+                self.Base.metadata.bind = self.engine
+                self.Base.metadata.create_all()
 
-        #fixed test parameters for all types of tests
-        self.name           = name
-        self.serial         = serial
-        self.bachNumber     = 0 
-        self.startDate      = str(datetime.datetime.now()).split(" ")[0]
-        self.startTime      = str(datetime.datetime.now()).split(" ")[1]
-        self.mkey           = str(name + "_"+serial)
-        self.result         = 'incomplete'
+                #create test entry 
+                self.testEntry = self.Test(name=name,batch_id=batch,desc=desc,result=result)
+                self.session.add(self.testEntry)
+                self.session.flush()
+                #self.session.commit()
+                        
+                #set primary key of testEntry for later use
+                self.testEntryId = self.testEntry.id
+                self.batchId     = batch
+                self.name        = name 
 
-        #store fixed test parameters in parameter list
-        self.parameters.append(('mkey',self.mkey))
-        self.parameters.append(('name',self.name))
-        self.parameters.append(('serial',self.serial))
-        self.parameters.append(('startDate',self.startDate))
-        self.parameters.append(('startTime',self.startTime))
-        self.parameters.append(('result',self.result))
-	
-       	#Initialize database connection
-        self.logger = TestLogger(db)
+                #setup holders for parameter and stats
+                self.dataHeader = []
+                self.dataSequence = 0
 
-        #check if mtr exists in database, create it if its not found 
-        if (self.logger.CheckTableExists('master_test_record') == -1):
-            fields = []
-            for p in self.parameters:
-                name,val = p 
-                fields.append((name,'text'))
+        def CreateParameter(self,name,val,desc=''):
+            tmp = self.Parameter(test_type=self.name,test_id=self.testEntryId, batch_id = self.batchId, 
+                                 name=name,val=val,desc=desc)
+
+            self.session.add(tmp)
+            self.session.flush()
+            #self.session.commit()
+            return 0
+
+        def DeleteParameter(self,name):
+            self.session.query(self.Parameter).filter_by(name=name).delete()
+            self.session.flush()
+            return 0
+        
+        def DeleteStatistic(self,name):
+            self.session.query(self.Statistic).filter_by(name=name).delete()
+            self.session.flush()
+            return 0
+
+        def DeleteDataField(self,name,seq):
+            self.session.query(self.Data).filter_by(name=name).filter_by(seq_num=seq).delete()
+            self.session.flush()
+            return 0
+        
+        def CreateStatistic(self,name,val,desc=''):
+            tmp = self.Statistic(test_type=self.name,test_id=self.testEntryId, batch_id = self.batchId, 
+                                 name=name,val=val,desc=desc)
+
+            self.session.add(tmp)
+            self.session.flush()
+            return 0
+         
+        def CreateDataField(self,name,seq=0,val='',desc=''):
+            tmp = self.Data(test_type=self.name, seq_num=seq, test_id=self.testEntryId, batch_id = self.batchId, 
+                                 name=name,val=val,desc=desc)
             
-            #create master test record table
-            self.logger.CreateTable('master_test_record',fields)        
+            #print name
+            self.session.add(tmp)
+            self.session.flush()
+            return 0
 
-                
-    def CreateParam(self,param,value):
-        self.parameters.append((str(param),str(value)))
-        return 0 
+        def SetDataHeader(self,header=[]):
+            self.dataHeader = header
+            return 0 
 
-    def CreateStat(self,stat,value):
-        self.statistics.append((str(stat),str(value)))
-        return 0
-
-    def SetResultHeader(self,header=[]):
-        self.resultHeader = header
-        return 0
-
-    def AddResultData(self,data=[]):
-        if (len(data) != len(self.resultHeader)):
-            return -1
-        else:
-            for i in range(len(data)):
-                data[i] = str(data[i])
-
-            self.resultData.append(data)
-            
-        return 0 
-
-    def UpdateParam(self,param,value):
-        for p in self.parameters:
-            if (p[0] == param):
-                p[1] = value
-            else:
+        def WriteDataLine(self,data=[]):
+            if (len(data) != len(self.dataHeader)):
                 return -1
-        return 0 
-
-    def UpdateStat(self,stat,value):
-        for s in self.statistics:
-            if (s[0] == param):
-                s[1] = value
-            else:
-                self.CreateStat(stat,value)
-        return 0 
-
-    def LookupParam(self,param):
-        for p in self.parameters:
-            if (p[0] == param):
-                return p[1]
-        
-        return None
-
-    def DisplayTestSummary(self): 
-        print "------------------ TEST SUMMARY ------------------"
-        print "Test Parameters\n"
-        for p in self.parameters:
-            print p[0] + ": " + p[1]
-
-        print "\n"
-        print "Test Statistics\n"
-        for s in self.statistics: 
-            print s[0] + ": " + s[1]
-
-        print "\n"
-        print "Test Results\n" 
-        tmp = ""
-        for h in self.resultHeader:
-            tmp = tmp + h + "\t"
-        
-        tmp = tmp + "\n"
-        print tmp 
-        for d in self.resultData:
-            tmp = ""
-            for x in d:
-                tmp = tmp + x + "\t"
-            tmp = tmp + "\n"
-            print tmp
-        
-        print "------------------ SUMMARY FINISHED ------------------"       
-
-    def PushTestResults(self):
-        fields = []
-        vals   = []
-
-        #process test parameters
-        #make sure all parameters exist in mtr
-        for params in self.parameters:
-            fields.append(params[0])    
-            vals.append(params[1])
             
-            #check if field exists in table, if not add it
-            ret = self.logger.CheckFieldExists('master_test_record',str(params[0]))
-            if (ret == -1):
-                self.logger.AddField('master_test_record',(params[0],'text'))
+            i = 0 
+            for val in data:
+                self.CreateDataField(name=self.dataHeader[i],seq=self.dataSequence,val=val)
+                i = i + 1 
+            self.dataSequence = self.dataSequence + 1
 
-        #write test to mtr
-        self.logger.InsertRow('master_test_record',vals)
-    
-        fields = []
-        vals   = []
+        def GetDataLine(self,seq):
+            values = self.session.query(self.Data).filter_by(test_id=self.testEntryId).filter_by(seq_num=seq)
+            return values 
+
+        def GetParams(self):
+            params = self.session.query(self.Parameter).filter_by(test_id=self.testEntryId)
+            return params
+
+        def GetStats(self):
+            stats = self.session.query(self.Statistic).filter_by(test_id=self.testEntryId)
+            return stats
+
+        def GetData(self):
+            data = self.session.query(self.Data).filter_by(test_id=self.testEntryId)
+            return data
         
-        #process test statistics 
-        if(self.logger.CheckTableExists(self.name+'_statistics') == -1):
-            self.logger.CreateTable(self.name+'_statistics',[('mkey','text')])
+        def Commit(self):
+            self.session.commit()
+            return 0
 
-        for stats in self.statistics:
-            fields.append(stats[0])    
-            vals.append(stats[1])
+        def DisplayTestResults(self):
+            params = self.GetParams()
+            stats  = self.GetStats()
+            
+            print "Printing Test Results\n"
+            
+            print "--------- Parameters -----------"
+            for p in params:
+                print p 
 
-            #check if field exists in table, if not add it
-            ret = self.logger.CheckFieldExists(self.name+'_statistics',str(stats[0]))
-            if (ret == -1):
-                self.logger.AddField(self.name+'_statistics',(stats[0],'text'))
+            print "\n-------- Statistics -----------"
+            for s in stats:
+                print s 
 
-        #write data to test statistics table
-        temp = [self.mkey]
-        temp = temp + vals
-        self.logger.InsertRow(self.name+'_statistics',temp)
- 
-        fields = []
-        vals   = []
+            print "\n ----------- Data --------------"
+
+            temp = ''
+            for field in self.dataHeader:
+                temp = temp + field + "\t"
         
-        #process test results 
-        if(self.logger.CheckTableExists(self.name+'_data') == -1):
-            self.logger.CreateTable(self.name+'_data',[('mkey','text')])
+            print temp
+            temp = ''
+            for i in range(self.dataSequence):
+                temp = ''
+                v = self.GetDataLine(i)
+                for rows in v: 
+                    temp = temp + rows.val + "\t\t"
 
-        for data in self.resultHeader:
-            #check if field exists in table, if not add it
-            ret = self.logger.CheckFieldExists(self.name+'_data',str(data))
-            if (ret == -1):
-                self.logger.AddField(self.name+'_data',(data,'text'))
-        
-        for data in self.resultData:
-            temp = [self.mkey]
-            temp = temp + data
-            self.logger.InsertRow(self.name+'_data',temp)
+                print temp
+                    
 
-    def DumpTestDatabase(self):
-        if (self.logger.CheckTestTypeExists(self.name) == -1):
-            return -1 
+            return 0
 
-        else:
-            #dump mtr
-            mtr_entries = self.logger.GetFields('master_test_record','name',self.name)
-            print mtr_entries
-            print "\n\n"
+#----------- Private Classes for Database Storage -------------#      
+	class Parameter(Base):
+		__tablename__ = 'parameter'
 
-            #dump test stats
-            stats_entries = self.logger.GetFields(self.name+"_statistics")
-            print stats_entries
+		#define table properties 
+		id 	  = Column(Integer, primary_key=True)
+                test_type = Column(String(250))
+                test_id   = Column(Integer)
+                batch_id  = Column(Integer)
+		name	  = Column(String(250)) 		
+		val	  = Column(String(250)) 		
+		desc	  = Column(String(250)) 		
+                
+                def __repr__(self):
+                    s =  "<Parameter(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
+                         self.id, self.test_type,self.test_id, self.batch_id, self.name, self.val, self.desc)
 
-            print "\n\n"
-            #dump test data
-            data_entries = self.logger.GetFields(self.name+"_data")
-            print data_entries
-        return 0
+                    return s
+
+	class Statistic(Base):
+		__tablename__ = 'statistic'
+
+		#define table properties 
+		id 	  = Column(Integer, primary_key=True)
+                test_type = Column(String(250))
+                test_id   = Column(Integer)
+                batch_id  = Column(Integer)
+		name	  = Column(String(250)) 		
+		val	  = Column(String(250)) 		
+		desc	  = Column(String(250)) 		
+                
+                def __repr__(self):
+                    s =  "<Statistic(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
+                         self.id, self.test_type, self.test_id, self.batch_id, self.name, self.val, self.desc)
+
+                    return s
+
+	class Data(Base):
+		__tablename__ = 'data'
+
+		#define table properties 
+		id 	  = Column(Integer, primary_key=True)
+                test_type = Column(String(250))
+                seq_num   = Column(Integer)
+                test_id   = Column(Integer)
+                batch_id  = Column(Integer)
+		name	  = Column(String(250)) 		
+		val	  = Column(String(250)) 		
+		desc	  = Column(String(250)) 		
+                
+                def __repr__(self):
+                    s =  "<Data(id='%d', test_type='%s', seq_num='%d', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
+                         self.id, self.test_type, self.seq_num, self.test_id, self.batch_id, self.name, self.val, self.desc)
+
+                    return s
+
+	class Test(Base): 
+		__tablename__ = 'test'
+
+		#define table properties 
+		id 	 = Column(Integer, primary_key=True) 
+                batch_id = Column(Integer) 
+		name	 = Column(String(250)) 	    
+		desc	 = Column(String(250)) 
+		result   = Column(String(250))
+		
+                def __repr__(self):
+                    s =  "<Test(id='%d', batch_id='%d', name='%s', result='%s', description='%s')>" % (
+                         self.id, self.batch_id, self.name, self.result, self.desc)
+
+                    return s
+
+
+	
 if __name__ == "__main__":
+    mytest = PyTest('powerapp','nfp6000 Power Test')
+    mytest.CreateParameter('nfp_serial','11234444444','nfp6000 serial number')
+    mytest.CreateParameter('board_serial','AMDA0099-0001-15234423','Board Serial')
+    mytest.CreateParameter('nfp_bsp','nfp-bsp-release-2015.11','bsp version')
 
-    mytest = PyTest('powerapp','AMDA0096-0001-150604223')
-    mytest.CreateParam('nfp_serial','15234556')
-    mytest.CreateParam('board_type','lithium')
-    mytest.CreateParam('board_serial','AMDA0096-0001-150604223')
-    mytest.CreateParam('bsp_version','2015.11')
+    params = mytest.GetParams()
+    for p in params: 
+        print p
 
-    mytest.CreateStat('minimum_power','0')
-    mytest.CreateStat('average_power','0')
-    mytest.CreateStat('maximum_power','0')
-
-    header = ['time','card_power','nfp_power', 'dac_power']
-    mytest.SetResultHeader(header)
+    dataHeader = ["timestamp","nfp_temp","nfp_power","card_power","system_power"]
+    mytest.SetDataHeader(dataHeader)
 
     for i in range(10):
-        testtime = time.time()
-        card_power = i*2
-        dac_power  = i*1.4
-        nfp_power  = i*1.2
-       	data_to_log = [testtime,card_power,nfp_power,dac_power]
-       	mytest.AddResultData(data_to_log)
+        timestamp = i
+        nfp_temp  = i*2
+        nfp_power = i*1.1
+        card_power = i*1.4
+        system_power = i*3.3
+    
+        data = [timestamp,nfp_temp,nfp_power,card_power,system_power]
+        mytest.WriteDataLine(data)
 
-    mytest.DisplayTestSummary()
-    mytest.PushTestResults()
-    mytest.DumpTestDatabase()
+    #data = mytest.GetData()
+    #print data
+    #for d in data: 
+    #    print d
+
+    mytest.DisplayTestResults()
