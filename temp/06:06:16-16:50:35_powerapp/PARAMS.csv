@@ -1,4 +1,0 @@
-id,test_type,test_id,batch_id,parameter name,value,description
-19,powerapp,7,-1,nfp_serial,11234444444,nfp6000 serial number
-20,powerapp,7,-1,board_serial,AMDA0099-0001-15234423,Board Serial
-21,powerapp,7,-1,nfp_bsp,nfp-bsp-release-2015.11,bsp version

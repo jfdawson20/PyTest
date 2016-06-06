@@ -1,4 +1,0 @@
-id,test_type,test_id,batch_id,parameter name,value,description
-13,powerapp,5,-1,min_power,0,Minimum power consumption during run
-14,powerapp,5,-1,max_power,0,Maximum power consumption during run
-15,powerapp,5,-1,average_power,0,Average power consumption during run
