@@ -149,7 +149,7 @@ class PyQuery():
             if not os.path.exists(testBase): 
                 os.makedirs(testBase)
 
-            print testBase
+            #print testBase
 
             datafile    = testBase+'/DATA.csv'
             paramsfile  = testBase+'/PARAMS.csv'
