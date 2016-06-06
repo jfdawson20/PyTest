@@ -34,3 +34,7 @@
 
 # Database files 
 *.db
+
+#data
+*.csv
+*.xlsx
