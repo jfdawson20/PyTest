@@ -1,0 +1,153 @@
+#!/usr/bin/python 
+
+import os  
+import time 
+import datetime
+from argparse import ArgumentParser
+
+from pydb import PyDB
+
+#import to make pretty tables 
+from terminaltables import AsciiTable
+
+#csv import
+import csv 
+
+class PyQuery(): 
+	def __init__(self,name,id):
+                self.db = PyDB(name)
+                self.testEntryId = id
+                self.test = self.GetTestInfo()[0]
+ 
+                self.dataSequence = self.test.data_count
+
+        def GetDataLine(self,seq):
+            values = self.db.session.query(self.db.Data).filter_by(test_id=self.testEntryId).filter_by(seq_num=seq)
+            return values 
+
+        def GetParams(self):
+            params = self.db.session.query(self.db.Parameter).filter_by(test_id=self.testEntryId)
+            return params
+
+        def GetStats(self):
+            stats = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId)
+            return stats
+
+        def GetTestInfo(self):
+            test = self.db.session.query(self.db.Test).filter_by(id=self.testEntryId)
+            return test
+
+        def GetData(self):
+            data = self.db.session.query(self.Data).filter_by(test_id=self.testEntryId)
+            return data
+        
+        def GetParamsTable(self): 
+            table = []
+            params = self.GetParams()
+            table.append(params[0].TableHeader())
+            for p in params:
+                table.append(p.TableLine())
+ 
+            return table
+
+        def GetStatsTable(self):
+            table = []
+            stats = self.GetStats()
+            table.append(stats[0].TableHeader())
+            for s in stats: 
+                table.append(s.TableLine())
+
+            return table 
+
+        def GetDataTable(self):
+            table = []
+            header = (self.test.data_header.split(" "))
+            table.append(header)
+            for i in range(self.test.data_count):
+                v = self.GetDataLine(i)
+                tableRow = []
+                for stuff in v: 
+                    tableRow.append(stuff.val)
+
+                table.append(tableRow)
+            return table
+
+        def GetTestTable(self):
+            table = []
+            stats = self.GetTestInfo()
+            table.append(stats[0].TableHeader())
+            for s in stats: 
+                table.append(s.TableLine())
+
+            return table 
+
+
+        def DisplayTestResults(self):
+            print "Printing Test Results\n"
+            print "-------- Test Information --------"
+            table = self.GetTestTable()
+            atable = AsciiTable(table)
+            print atable.table 
+
+            print "\n--------- Parameters -----------"
+            table = self.GetParamsTable()
+            atable = AsciiTable(table) 
+            print atable.table
+
+
+            print "\n-------- Statistics -----------"
+            table = self.GetStatsTable()
+            atable = AsciiTable(table)
+            print atable.table
+
+
+            print "\n ----------- Data --------------"
+            table = self.GetDataTable()
+            atable = AsciiTable(table)
+            print atable.table
+                    
+
+            return 0
+
+        def ExportCSV(self,base='./data'):
+            #make local csv directory if it doesnt exist 
+            if not os.path.exists(base): 
+                os.makedirs(base)
+
+            testBase = base+'/'+self.startDate+'_'+self.startTime+'_'+self.name
+            if not os.path.exists(testBase): 
+                os.makedirs(testBase)
+
+            print testBase
+
+            datafile    = testBase+'/DATA.csv'
+            paramsfile  = testBase+'/PARAMS.csv'
+            statsfile  = testBase+'/STATS.csv'
+
+            with open(datafile,'w') as cfile:
+                writer = csv.writer(cfile)
+                rows = self.GetDataTable()
+                for row in rows: 
+                    writer.writerow(row)
+
+            with open(paramsfile,'w') as cfile:
+                writer = csv.writer(cfile)
+                rows = self.GetParamsTable()
+                for row in rows: 
+                    writer.writerow(row)
+
+            with open(statsfile,'w') as cfile:
+                writer = csv.writer(cfile)
+                rows = self.GetStatsTable()
+                for row in rows: 
+                    writer.writerow(row)
+            return 0
+
+            
+	
+if __name__ == "__main__":
+
+
+
+    myQuery = PyQuery('powerapp',2)
+    myQuery.DisplayTestResults()
