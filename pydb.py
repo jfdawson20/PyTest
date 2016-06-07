@@ -40,7 +40,10 @@ class PyDB():
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
-                
+               
+                def __len__(self):
+                    return 7
+ 
                 def __repr__(self):
                     s =  "<Parameter(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
                          self.id, self.test_type,self.test_id, self.batch_id, self.name, self.val, self.desc)
@@ -66,6 +69,9 @@ class PyDB():
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
+
+                def __len__(self):
+                    return 7
                 
                 def __repr__(self):
                     s =  "<Statistic(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
@@ -94,7 +100,10 @@ class PyDB():
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
-                
+        
+                def __len__(self):
+                    return 8
+        
                 def __repr__(self):
                     s =  "<Data(id='%d', test_type='%s', seq_num='%d', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
                          self.id, self.test_type, self.seq_num, self.test_id, self.batch_id, self.name, self.val, self.desc)
@@ -124,6 +133,9 @@ class PyDB():
                 data_count = Column(Integer)
                 data_header = Column(String(1024))
 
+                def __len__(self):
+                    return 9
+
                 def __repr__(self):
                     s =  "<Test(id='%d', batch_id='%d', name='%s', result='%s', description='%s')>" % (
                          self.id, self.batch_id, self.name, self.result, self.desc)
@@ -131,7 +143,7 @@ class PyDB():
                     return s
 
                 def TableLine(self):
-                    line = [self.id,self.start_datetime,self.end_datetime,self.batch_id,self.name,self.desc,self.result,self.data_count]
+                    line = [self.id,self.start_datetime.strftime("%m:%d:%y-%H:%M:%S"),self.end_datetime.strftime("%m:%d:%y-%H:%M:%S"),self.batch_id,self.name,self.desc,self.result,self.data_count]
                     return line
 
                 def TableHeader(self):

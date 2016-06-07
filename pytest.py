@@ -3,6 +3,7 @@
 import os  
 import time 
 import datetime
+import random 
 
 from pydb import PyDB
 
@@ -11,6 +12,7 @@ from terminaltables import AsciiTable
 
 #csv import
 import csv 
+import xlsxwriter
 
 class PyTest(): 
 	def __init__(self,name,desc,res='not_available',batch=-1):
@@ -65,6 +67,10 @@ class PyTest():
             self.db.session.add(tmp)
             self.db.session.flush()
             return 0
+
+        def UpdateStatistic(self,name,val):
+            tmp = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId).filter_by(name=name).update({"val":val})
+            return 0
          
         def CreateDataField(self,name,seq=0,val='',desc=''):
             tmp = self.db.Data(test_type=self.name, seq_num=seq, test_id=self.testEntryId, batch_id = self.batchId, 
@@ -110,7 +116,13 @@ class PyTest():
         def GetData(self):
             data = self.db.session.query(self.Data).filter_by(test_id=self.testEntryId)
             return data
-        
+       
+        def CloseTest(self,result):
+            self.endDateTime = datetime.datetime.now()#.strftime("%H:%M:%S")
+            self.testEntry.end_datetime = self.endDateTime
+            self.testEntry.result = result
+            return 0            
+ 
         def Commit(self):
             self.db.session.commit()
             return 0
@@ -219,6 +231,28 @@ class PyTest():
                     writer.writerow(row)
             return 0
 
+        def ExportExcel(self,base='./data'):
+            #make local csv directory if it doesnt exist 
+            if not os.path.exists(base): 
+                os.makedirs(base)
+
+            testBase = base+'/'+self.startDateTime.strftime("%m:%d:%y-%H:%M:%S")+'_'+self.name
+            #print testBase
+            if not os.path.exists(testBase): 
+                os.makedirs(testBase)
+
+            #print testBase
+
+            excelfile    = testBase+'/DATA.csv'
+
+            test = self.GetTestTable()
+            data = self.GetDataTable()
+            params = self.GetParamsTable()    
+            stats = self.GetStatsTable()
+                
+            
+            return 0
+
             
 	
 if __name__ == "__main__":
@@ -227,27 +261,56 @@ if __name__ == "__main__":
     mytest.CreateParameter('board_serial','AMDA0099-0001-15234423','Board Serial')
     mytest.CreateParameter('nfp_bsp','nfp-bsp-release-2015.11','bsp version')
 
-    mytest.CreateStatistic('min_power',0,'Minimum power consumption during run')
-    mytest.CreateStatistic('max_power',0,'Maximum power consumption during run')
-    mytest.CreateStatistic('average_power',0,'Average power consumption during run')
+    mytest.CreateStatistic('min_power',-1,'Minimum power consumption during run')
+    mytest.CreateStatistic('max_power',-1,'Maximum power consumption during run')
+    mytest.CreateStatistic('average_power',-1,'Average power consumption during run')
 
     dataHeader = ["timestamp","nfp_temp","nfp_power","card_power","system_power","hello","11111111","22222222","333333333"]
     mytest.SetDataHeader(dataHeader)
 
-    for i in range(10):
-        timestamp = i
-        nfp_temp  = i*2
-        nfp_power = i*1.1
-        card_power = i*1.4
-        system_power = i*3.3
+    r = int(random.random()*100)
+    for i in range(r):
+        rand = random.random()
+
+        timestamp = rand
+        nfp_temp  = rand*2
+        nfp_power = rand*1.1
+        card_power = rand*1.4
+        system_power = rand*3.3
         hello  = 'hi'
         a1 = 'a1'
         a2 = 'a2'
         a3 = 'a3'
-
+        
         data = [timestamp,nfp_temp,nfp_power,card_power,system_power,hello,a1,a2,a3]
         mytest.WriteDataLine(data)
 
+        if(i == 0):
+            min_power = nfp_power
+            max_power = nfp_power
+            average_sum = nfp_power
+
+        else:
+            if nfp_power > max_power:
+                max_power = nfp_power
+
+            if nfp_power < min_power:
+                min_power = nfp_power
+
+            average_sum += nfp_power
+
+    mytest.UpdateStatistic('min_power',min_power)
+    mytest.UpdateStatistic('max_power',max_power)
+    
+    average_power = (average_sum)/i
+    mytest.UpdateStatistic('average_power',average_power)
+             
+    if (rand <= .5):
+        mytest.CloseTest('Pass')
+
+    else:
+        mytest.CloseTest('fail')
+
     mytest.DisplayTestResults()
-    mytest.ExportCSV()
+    #mytest.ExportCSV()
     mytest.Commit()
