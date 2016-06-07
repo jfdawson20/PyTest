@@ -18,16 +18,34 @@ import csv
 
 class PyDB(): 
 	Base   = declarative_base() 
-	def __init__(self,name):
+	def __init__(self,name,dbtype='sqlite',user=None,password=None,host=None):
                 #setup database connection and session 
-		self.engine  = create_engine('sqlite:///' + name + '.db', echo=False)
+                if (dbtype ==  'sqlite'):
+		    self.engine = create_engine('sqlite:///' + name + '.db', echo=False)
+                elif (dbtype == 'mysql'):
+                    self.engine = create_engine('mysql://'+user+':'+password+'@'+host)
+                    databases = self.engine.execute("SHOW DATABASES;")
+                    databases = [d[0] for d in databases]
+                    
+                    if (name not in databases):
+                        self.engine.execute("CREATE DATABASE "+name) #create db
+                    
+                    self.engine.execute("USE "+name) # select new db
+
 		self.Session = sessionmaker()
 		self.Session.configure(bind=self.engine)
 		self.session = self.Session()
                 self.Base.metadata.bind = self.engine
                 self.Base.metadata.create_all()
 
-            
+        def CopyToNewDB(self,newDb):
+            tables = self.Base.metadata.tables;
+            for t in tables: 
+                data = self.engine.execute(tables[t].select()).fetchall()
+                if data: 
+                    newDb.engine.execute(tables[t].insert(),data)
+
+            return 0
 #----------- Private Classes for Database Storage -------------#      
         class Parameter(Base):
 		__tablename__ = 'parameter'
