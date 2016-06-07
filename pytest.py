@@ -253,8 +253,7 @@ class PyTest():
             
             return 0
 
-            
-	
+#example case            
 if __name__ == "__main__":
     mytest = PyTest('powerapp','nfp6000 Power Test')
     mytest.CreateParameter('nfp_serial','11234444444','nfp6000 serial number')

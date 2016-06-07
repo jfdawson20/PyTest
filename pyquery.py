@@ -1,25 +1,48 @@
 #!/usr/bin/python 
 
+#standard python imports
 import os  
 import time 
 import datetime
 from argparse import ArgumentParser
 import sys 
 
+#sqlalchemy db overlay 
 from pydb import PyDB
 
 #import to make pretty tables 
 from terminaltables import AsciiTable
 
-#csv import
+#csv and excel writer import
 import csv 
 import xlsxwriter
 
+"""
+PyQuery Class
+-------------
+The PyQuery class servers as an access point to an already
+predefined sqlite /sqlachemy database.
+
+Creation: newquery = PyQuery(name_of_database)
+
+Functions: 
+GetTests     : Gater test records based on user provided filters 
+DisplayTests : Display test records in asciitable format 
+
+
+"""
 class PyQuery(): 
 	def __init__(self,name):
                 self.db = PyDB(name)
     
-        #list all tests in database
+        """
+        GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None)
+        - Main function for gathering and filtering test results from database 
+        - id            : specific test ID to query 
+        - startDateTime : start date and time. All records after this will be returned 
+        - endDateTime   : end date and time. All records before this will be returned 
+        - result        : test result to filter by
+        """
         def GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None): 
             tests = self.db.session.query(self.db.Test)
             #start_datetime = datetime.datetime.now()
@@ -53,17 +76,45 @@ class PyQuery():
 
             ret = self.GetBatchHighlights(tests)
             print "\nTEST GROUP HIGHLIGHTS"
-            print "Number of Tests:",ret[0]
+            #print "Number of Tests:",ret[0]
+           
+            table0 = [["Number of Tests",ret[0]]]
             
+            table1 = [["Minimum Statistic","Value","Run"]]
             for results in ret[1]:
-                print "Minimum Stat:",results[1],"Value",results[2],"Run:",results[0]
+                row = [results[1],results[2],results[0]]
+                table1.append(row)
+                #print "Minimum Stat:",results[1],"Value",results[2],"Run:",results[0]
 
+            table2 = [["Maximum Statistic","Value","Run"]]
             for results in ret[2]:
-                print "Maximum Stat:",results[1],"Value",results[2],"Run:",results[0]   
+                row = [results[1],results[2],results[0]]
+                table2.append(row)
+                #print "Maximum Stat:",results[1],"Value",results[2],"Run:",results[0]   
         
+            table3 = [["Result Type","Count"]]
             for results in ret[3]:
-                print "Runs With Result:",results[0],"Value",results[1]
+                row = [results[0],results[1]]
+                table3.append(row)
+                #print "Runs With Result:",results[0],"Value",results[1]
             
+            atable = AsciiTable(table0)
+            print atable.table
+            print ""
+
+            atable = AsciiTable(table1)
+            print atable.table
+            print ""
+
+            atable = AsciiTable(table2)
+            print atable.table
+            print ""
+
+            atable = AsciiTable(table3)
+            print atable.table
+            print ""
+
+            return 0
 
         def GetDataLine(self,testId,seq):
             values = self.db.session.query(self.db.Data).filter_by(test_id=testId).filter_by(seq_num=seq)
@@ -200,7 +251,7 @@ class PyQuery():
 
             testInfo = self.GetTestInfo(tests[0].id)
             ret = []
-            ret.append([testInfo[0].result,1])
+            ret.append([testInfo[0].result,0])
             for t in tests:
                 hit = 0
                 testInfo = self.GetTestInfo(t.id)
@@ -232,11 +283,12 @@ class PyQuery():
             if not os.path.exists(base): 
                 os.makedirs(base)
 
-            testBase = base+'/'+datetime.datetime.now().strftime("%m:%d:%y-%H:%M:%S")+'_combined'
+            testBase = base+'/'+datetime.datetime.now().strftime("%m_%d_%y-%H_%M_%S")+'_combined'
             if not os.path.exists(testBase): 
                 os.makedirs(testBase)
 
             filename = testBase + '/combined_results.xlsx'
+            print "Exporting Merged Excel Data to File: ",filename 
 
             #create excel workbook
             workbook        = xlsxwriter.Workbook(filename,{'strings_to_numbers': True})
@@ -261,16 +313,21 @@ class PyQuery():
                 dataSheet[i].set_column(0,100,15)
                 i+=1 
 
+            hrow = 0
+            hcol = 0
+    
             srow = 0     
             scol = 0
             
             drow = 0
             dcol = 0
 
+
             merge_format = workbook.add_format({'align': 'center'})
             summarySheet.merge_range(srow,scol,srow,scol+smaxcols,'TEST SUMMARY',merge_format)
             srow+=1
             
+            print "Writing Summary Sheet\n"
             #write summary sheete
             for t in tests:
                 scol = 0
@@ -312,7 +369,78 @@ class PyQuery():
                     scol+=1
 
                 srow+=1
-                    
+            
+            #write Highlight to highlightSheet
+            ret = self.GetBatchHighlights(tests)
+
+            #setup worksheet
+            merge_format = workbook.add_format({'align': 'center'})
+            highlightSheet.merge_range(hrow,hcol,hrow,hcol+5,'TEST HIGHLIGHTS',merge_format)
+            highlightSheet.set_column(hcol,hcol+max(len(ret[1]),len(ret[2]),len(ret[3])),20)
+            hrow+=1 
+
+            print "Writing Highlights\n"
+            #write number of tests
+            table = [["Number of Tests",ret[0]]]
+            for x in table:
+                hcol=0
+                for y in x:
+                    highlightSheet.write(hrow,hcol,y)
+                    hcol+=1
+
+                hrow+=1
+            hrow+=1
+            hcol=0
+
+            #write min stats
+            table = [["Minimum Statistic","Value","Run"]]
+            for results in ret[1]:
+                row = [results[1],results[2],results[0]]
+                table.append(row)
+
+            for x in table:
+                hcol=0
+                for y in x:
+                    highlightSheet.write(hrow,hcol,y)
+                    hcol+=1
+
+                hrow+=1
+            hrow+=1               
+            hcol=0
+        
+            #write max stats
+            table = [["Maximum Statistic","Value","Run"]]
+            for results in ret[2]:
+                row = [results[1],results[2],results[0]]
+                table.append(row)
+                   
+            for x in table:
+                hcol=0
+                for y in x:
+                    highlightSheet.write(hrow,hcol,y)
+                    hcol+=1
+
+                hrow+=1
+            hrow+=1
+            hcol=0
+            
+            #write results summary
+            table = [["Result Type","Count"]]
+            for results in ret[3]:
+                row = [results[0],results[1]]
+                table.append(row)
+                
+            for x in table:
+                hcol=0
+                for y in x:
+                    highlightSheet.write(hrow,hcol,y)
+                    hcol+=1
+
+                hrow+=1
+            hrow+=1
+            hcol=0
+
+            print "Writing Data Pages\n"
             #write data sheets
             i = 0
             for t in tests:
@@ -331,7 +459,7 @@ class PyQuery():
                 i+=1 
 
             workbook.close()
-
+            print "Export Completed\n"
 
 
         def ExportExcel(self,test,base='./data'):
@@ -339,7 +467,7 @@ class PyQuery():
             if not os.path.exists(base): 
                 os.makedirs(base)
 
-            testBase = base+'/'+test.start_datetime.strftime("%m:%d:%y-%H:%M:%S")+'_'+test.name
+            testBase = base+'/'+test.start_datetime.strftime("%m_%d_%y-%H_%M_%S")+'_'+test.name
             if not os.path.exists(testBase): 
                 os.makedirs(testBase)
 
@@ -426,7 +554,7 @@ class PyQuery():
             if not os.path.exists(base): 
                 os.makedirs(base)
 
-            testBase = base+'/'+test.start_datetime.strftime("%m:%d:%y-%H:%M:%S")+'_'+test.name
+            testBase = base+'/'+test.start_datetime.strftime("%m_%d_%y-%H_%M_%S")+'_'+test.name
             if not os.path.exists(testBase): 
                 os.makedirs(testBase)
 
