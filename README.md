@@ -47,21 +47,22 @@ pyquery.py - PyQuery Class:
 2) Create an instance of PyTest
     MyTest = PyTest(name='test_name',desc='test description string')
 
-3) Add test parameters
+# Add Test Parameters
     MyTest.CreateParameter(name='parameter1',val=val, desc='descripton of parameter')
     MyTest.CreateParameter...
     ...
 
-4) Add test statistics 
+# Add Test Statistics 
     MyTest.CreateStatistic(name='stat1',val=val, desc='descripton of statistic')
     MyTest.CreateStatistic...
     ...
 
-5) Create Data header
+# Create Data header
     header = ['header 1', 'header 2', 'header 3', header 4']
     MyTest.SetDataHeader(header)
 
-6) Run test ... while running add data lines, update stats, etc 
+# Run test
+## While running test log data, update stats, etc 
     
     while(TestIsRunning)
         data1 = getData1()
@@ -76,11 +77,11 @@ pyquery.py - PyQuery Class:
         ...
         ...
 
-7) Stop Test, log result 
+# Stop Test, log result 
     MyTest.CloseTest('user_defined_result_string')    
 
         
-8) Commit test log to database 
+# Commit test log to database 
     MyTest.Commit()
     
  
