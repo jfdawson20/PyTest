@@ -44,9 +44,18 @@ class PyQuery():
         endDateTime   : end date and time. All records before this will be returned 
         result        : test result to filter by
     """
-    def GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None): 
+    def GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None,params=None,stats=None): 
+        
+        #grab all tests in database 
         tests = self.db.session.query(self.db.Test)
-        #start_datetime = datetime.datetime.now()
+        
+        #cross table filtering
+        #if(params != None):
+        #    tests 
+        #if(stats != None):
+
+       
+        #filter tests by id, date, time, and result 
         if (id != None):
             tests = tests.filter(self.db.Test.id == id)
 
@@ -61,7 +70,7 @@ class PyQuery():
         if (result != None): 
             tests = tests.filter(self.db.Test.result == result)          
                           
-           
+        
         return tests
 
     '''

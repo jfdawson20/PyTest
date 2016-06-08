@@ -7,8 +7,8 @@ import datetime
 # sqlachemy imports for database interface
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy.orm import sessionmaker,relationship
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 
 #import to make pretty tables 
 from terminaltables import AsciiTable
@@ -67,7 +67,7 @@ class PyDB():
 		#define table properties 
 		id 	  = Column(Integer, primary_key=True)
                 test_type = Column(String(250))
-                test_id   = Column(Integer)
+                test_id   = Column(Integer,ForeignKey('test.id'))
                 batch_id  = Column(Integer)
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
@@ -107,7 +107,7 @@ class PyDB():
 		#define table properties 
 		id 	  = Column(Integer, primary_key=True)
                 test_type = Column(String(250))
-                test_id   = Column(Integer)
+                test_id   = Column(Integer,ForeignKey('test.id'))
                 batch_id  = Column(Integer)
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
@@ -153,7 +153,7 @@ class PyDB():
 		id 	  = Column(Integer, primary_key=True)
                 test_type = Column(String(250))
                 seq_num   = Column(Integer)
-                test_id   = Column(Integer)
+                test_id   = Column(Integer,ForeignKey('test.id'))
                 batch_id  = Column(Integer)
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
