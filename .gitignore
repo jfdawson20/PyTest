@@ -1,3 +1,5 @@
+pytest.egg-info/
+
 # Object files
 *.o
 *.ko

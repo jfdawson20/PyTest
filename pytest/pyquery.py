@@ -37,12 +37,12 @@ class PyQuery():
         self.db = PyDB(name=name,dbtype=dbtype,user=user,password=password,host=host)
     
     """
-    GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None)
-    - Main function for gathering and filtering test results from database 
-    - id            : specific test ID to query 
-    - startDateTime : start date and time. All records after this will be returned 
-    - endDateTime   : end date and time. All records before this will be returned 
-    - result        : test result to filter by
+    GetTests Function: Main function for gathering and filtering test results from database 
+    Arguments: 
+        id            : specific test ID to query 
+        startDateTime : start date and time. All records after this will be returned 
+        endDateTime   : end date and time. All records before this will be returned 
+        result        : test result to filter by
     """
     def GetTests(self,id=None,startDateTime=None,endDateTime=None,result=None): 
         tests = self.db.session.query(self.db.Test)
@@ -64,6 +64,11 @@ class PyQuery():
            
         return tests
 
+    '''
+    DisplayTests Function: Displays test info for all test entries in an asciitables
+    Arguments
+        tests : List: List of test objects 
+    '''
     def DisplayTests(self,tests): 
         table = []
         i = 0
@@ -75,68 +80,89 @@ class PyQuery():
         atable = AsciiTable(table)
         print atable.table
 
-        ret = self.GetBatchHighlights(tests)
-        print "\nTEST GROUP HIGHLIGHTS"
-        #print "Number of Tests:",ret[0]
+        if(len(table) > 0):
+            ret = self.GetBatchHighlights(tests)
+            print "\nTEST GROUP HIGHLIGHTS"
+            #print "Number of Tests:",ret[0]
        
-        table0 = [["Number of Tests",ret[0]]]
+            table0 = [["Number of Tests",ret[0]]]
         
-        table1 = [["Minimum Statistic","Value","Run"]]
-        for results in ret[1]:
-            row = [results[1],results[2],results[0]]
-            table1.append(row)
-            #print "Minimum Stat:",results[1],"Value",results[2],"Run:",results[0]
+            table1 = [["Minimum Statistic","Value","Run"]]
+            for results in ret[1]:
+                row = [results[1],results[2],results[0]]
+                table1.append(row)
+                #print "Minimum Stat:",results[1],"Value",results[2],"Run:",results[0]
 
-        table2 = [["Maximum Statistic","Value","Run"]]
-        for results in ret[2]:
-            row = [results[1],results[2],results[0]]
-            table2.append(row)
-            #print "Maximum Stat:",results[1],"Value",results[2],"Run:",results[0]   
+            table2 = [["Maximum Statistic","Value","Run"]]
+            for results in ret[2]:
+                row = [results[1],results[2],results[0]]
+                table2.append(row)
+                #print "Maximum Stat:",results[1],"Value",results[2],"Run:",results[0]   
     
-        table3 = [["Result Type","Count"]]
-        for results in ret[3]:
-            row = [results[0],results[1]]
-            table3.append(row)
-            #print "Runs With Result:",results[0],"Value",results[1]
+            table3 = [["Result Type","Count"]]
+            for results in ret[3]:
+                row = [results[0],results[1]]
+                table3.append(row)
+                #print "Runs With Result:",results[0],"Value",results[1]
         
-        atable = AsciiTable(table0)
-        print atable.table
-        print ""
+            atable = AsciiTable(table0)
+            print atable.table
+            print ""
 
-        atable = AsciiTable(table1)
-        print atable.table
-        print ""
+            atable = AsciiTable(table1)
+            print atable.table
+            print ""
 
-        atable = AsciiTable(table2)
-        print atable.table
-        print ""
+            atable = AsciiTable(table2)
+            print atable.table
+            print ""
 
-        atable = AsciiTable(table3)
-        print atable.table
-        print ""
+            atable = AsciiTable(table3)
+            print atable.table
+            print ""
 
         return 0
 
+    '''
+    GetDataLine Function: Get all Data Objects from session with the same sequence number 
+    Arguments:
+        seq     : Integer: Sequence number to collect
+    '''   
     def GetDataLine(self,testId,seq):
         values = self.db.session.query(self.db.Data).filter_by(test_id=testId).filter_by(seq_num=seq)
         return values 
 
+    '''
+    GetParams Function: Get all Parameters in Session
+    '''
     def GetParams(self,testId):
         params = self.db.session.query(self.db.Parameter).filter_by(test_id=testId)
         return params
-
+        
+    '''
+    GetStats Function: Get all Stats in Session
+    '''
     def GetStats(self,testId):
         stats = self.db.session.query(self.db.Statistic).filter_by(test_id=testId)
         return stats
-
+        
+    '''
+    GetTestInfo Function: Get Test Entry for Session
+    '''
     def GetTestInfo(self,testId):
         test = self.db.session.query(self.db.Test).filter_by(id=testId)
         return test
-
+        '''
+        GetData Function: Get all Data Entries in Session
+        '''
     def GetData(self,testId):
         data = self.db.session.query(self.db.Data).filter_by(test_id=testId)
         return data
-    
+
+    '''
+    GetParamsTable Function: Returns a 2D list of all parameters in test entry
+    first entry is a list of paramter headers 
+    '''    
     def GetParamsTable(self,testId): 
         table = []
         params = self.GetParams(testId)
@@ -145,7 +171,11 @@ class PyQuery():
             table.append(p.TableLine())
  
         return table
-
+        
+    '''
+    GetStatsTable Function: Returns a 2D list of all statistics in test entry
+    first entry is a list of statistic headers
+    '''
     def GetStatsTable(self,testId):
         table = []
         stats = self.GetStats(testId)
@@ -155,7 +185,11 @@ class PyQuery():
             table.append(s.TableLine())
 
         return table 
-
+        
+    '''
+    GetDataTable Function: Returns a 2D list of all data entrys in test, organized by sequence number 
+    first entry is a list of data headers defined by the user before calling this function ! 
+    '''
     def GetDataTable(self,testId):
         test = self.GetTestInfo(testId) 
         dc = test[0].data_count 
@@ -171,6 +205,10 @@ class PyQuery():
             table.append(tableRow)
         return table
 
+    '''
+    GetTestTable Function: Returns a 2D list of test information
+    first entry is a list of test info headers 
+    '''
     def GetTestTable(self,testId,header=0):
         table = []
         stats = self.GetTestInfo(testId)
@@ -182,7 +220,12 @@ class PyQuery():
 
         return table 
 
-
+    '''
+    DisplayTestResults Function: Prints all information for test 'test'
+    to the console in asciitables
+	Arguments
+		test - test object 
+    '''
     def DisplayTestResults(self,test):
         print "Printing Test Results\n"
         print "-------- Test Information --------"
@@ -210,6 +253,13 @@ class PyQuery():
 
         return 0
     
+    '''
+    MinStats Function: Searches through all tests provided and 
+    creates a 2D list (one entry per statistic) listing what the minimum
+    Statistic is and which test entry it occured in. 
+    Arguments:
+        tests - list: List of Test Entries 
+    '''
     def MinStats(self,tests):
         stats = self.GetStats(tests[0].id)
         minstats = []
@@ -228,7 +278,15 @@ class PyQuery():
                 i+=1
 
         return minstats
-        
+
+
+    '''
+    MaxStats Function: Searches through all tests provided and 
+    creates a 2D list (one entry per statistic) listing what the maximum
+    Statistic is and which test entry it occured in. 
+    Arguments:
+        tests - list: List of Test Entries 
+    '''
     def MaxStats(self,tests):
         stats = self.GetStats(tests[0].id)
         maxstats = []
@@ -248,6 +306,14 @@ class PyQuery():
 
         return maxstats
         
+
+    '''
+    ResultStats Function: Searches through all tests provided and 
+    creates a 2D list (one entry per result type found) listing what number
+    of tests produced that result 
+    Arguments:
+        tests - list: List of Test Entries 
+    '''
     def ResultStats(self,tests):
 
         testInfo = self.GetTestInfo(tests[0].id)
@@ -266,7 +332,13 @@ class PyQuery():
 
         return ret
 
-
+    '''
+    GetBatchHightlights Function: Searches through all tests provided and 
+    return number of runs, array of minstats, array of maxstats, and an array of 
+    result stats.
+    Arguments:
+        tests - list: List of Test Entries 
+    '''
     def GetBatchHighlights(self,tests):
         minstats = self.MinStats(tests)
         maxstats = self.MaxStats(tests)
@@ -279,6 +351,21 @@ class PyQuery():
         ret = [numRuns,minstats,maxstats,resStats]
         return ret
     
+    '''
+    ExportCombinedExcel Function: Creates an excel 2007 document containing results from multiple 
+    test entries. Excel sheet contains the following sheets: 
+        Highlights (Sheet1)     : Captures the results of the GetBatchHighlights function
+        Graph (Sheet2, Optional): Contains a graph of all test data based on user provided parameters
+        Summary (Sheet3)        : Captures a summary of each test in one table 
+        DataSheets (Sheets 4-N) : Data for each test, organized by sequence number with row 1 being the data header 
+    By default the graph sheet will not be included unless the user supplys the graph type and x,y parameters 
+    Arguments: 
+        tests   : List: List of Test Entries 
+        base    : String: Folder to store data - Defaults to ./data
+        gtype   : String: Type of excel graph ('bar','scatter','line',etc) - Defaults to None
+        xField  : String: Field from data header to use as the x value for generated graph - Defaults to None
+        yField  : List  : List of Strings (Max 2) - Field(s) from data header to use a y value(s) for generated graph - Defaults to None 
+    '''
     def ExportCombinedExcel(self,tests,base='./data',gtype=None,xField=None,yField=None):
         #make local csv directory if it doesnt exist 
         if not os.path.exists(base): 
@@ -513,7 +600,9 @@ class PyQuery():
         print "Export Completed\n"
         
 
-
+        '''
+        ExportExcel: Produces a seperate excel file per test in test
+        '''
     def ExportExcel(self,test,base='./data'):
         #make local csv directory if it doesnt exist 
         if not os.path.exists(base): 
@@ -601,6 +690,9 @@ class PyQuery():
 
         workbook.close()
 
+    '''
+    ExportCSV: Export each test into seperate sets of CSV files 
+    '''
     def ExportCSV(self,test,base='./data'):
         #make local csv directory if it doesnt exist 
         if not os.path.exists(base): 
@@ -672,7 +764,6 @@ if __name__ == "__main__":
     export_parser.add_argument('-s', '--server', dest='dbHost', help='New Database Host', default=None)   
     
     args = parent_parser.parse_args()
-    print args 
     
     if (args.srcDatabase == None):
         print "No Database Provided, Exiting"

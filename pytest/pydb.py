@@ -16,6 +16,10 @@ from terminaltables import AsciiTable
 #csv import
 import csv 
 
+'''
+Class: PyDB 
+PyDB provides access to a underlying database via a set of sqlalchemy api's.
+'''
 class PyDB(): 
 	Base   = declarative_base() 
 	def __init__(self,name,dbtype='sqlite',user=None,password=None,host=None):
@@ -37,7 +41,12 @@ class PyDB():
 		self.session = self.Session()
                 self.Base.metadata.bind = self.engine
                 self.Base.metadata.create_all()
-
+        
+        '''
+        Function to copy current database contents to a new database instance. 
+        newDb is of type PyDB and must already be setup to contain the correct tables used by 
+        MyDB 
+        '''
         def CopyToNewDB(self,newDb):
             tables = self.Base.metadata.tables;
             for t in tables: 
@@ -46,7 +55,12 @@ class PyDB():
                     newDb.engine.execute(tables[t].insert(),data)
 
             return 0
-#----------- Private Classes for Database Storage -------------#      
+#----------- Private Classes for Database Storage -------------#  
+
+        '''
+        The Parameter class provides the python object representation of the Paramter table 
+        found within the sql database.
+        '''
         class Parameter(Base):
 		__tablename__ = 'parameter'
 
@@ -61,21 +75,32 @@ class PyDB():
                
                 def __len__(self):
                     return 7
- 
+                
+                '''
+                Python repr function, returns formatted string when str(type Test) is called
+                '''
                 def __repr__(self):
                     s =  "<Parameter(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
                          self.id, self.test_type,self.test_id, self.batch_id, self.name, self.val, self.desc)
             
                     return s
-
+                '''
+                TableLine function, returns array of all relavant object parameters.
+                '''
                 def TableLine(self):
                     line = [self.id,self.test_type,self.test_id,self.batch_id,self.name,self.val,self.desc]
                     return line
 
+                '''
+                TableHeader function, returns array of all relavant object parameter names in string format.
+                '''
                 def TableHeader(self):
                     header = ['id','test_type','test_id','batch_id','parameter name','value','description']
                     return header
-
+        '''
+        The Stats class provides the python object representation of the Data table 
+        found within the sql database.
+        '''
 	class Statistic(Base):
 		__tablename__ = 'statistic'
 
@@ -88,24 +113,39 @@ class PyDB():
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
 
+                '''
+                Python length function, allows support for len(type Statistic) operations
+                '''
                 def __len__(self):
                     return 7
-                
+
+                '''
+                Python repr function, returns formatted string when str(type Test) is called
+                '''
                 def __repr__(self):
                     s =  "<Statistic(id='%d', test_type='%s', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
                          self.id, self.test_type, self.test_id, self.batch_id, self.name, self.val, self.desc)
 
                     return s
-
+                
+                '''
+                TableLine function, returns array of all relavant object parameters.
+                '''
                 def TableLine(self):
                     line = [self.id,self.test_type,self.test_id,self.batch_id,self.name,self.val,self.desc]
                     return line
-
+                
+                '''
+                TableHeader function, returns array of all relavant object parameter names in string format.
+                '''
                 def TableHeader(self):
                     header = ['id','test_type','test_id','batch_id','parameter name','value','description']
                     return header
 
-
+        '''
+        The Data class provides the python object representation of the Data table 
+        found within the sql database.
+        '''
 	class Data(Base):
 		__tablename__ = 'data'
 
@@ -118,25 +158,40 @@ class PyDB():
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
-        
+                
+                '''
+                Python length function, allows support for len(type Statistic) operations
+                '''       
                 def __len__(self):
                     return 8
-        
+                
+                '''
+                Python repr function, returns formatted string when str(type Test) is called
+                '''       
                 def __repr__(self):
                     s =  "<Data(id='%d', test_type='%s', seq_num='%d', test_id='%d', batch_id='%d', name='%s', val='%s', description='%s')>" % (
                          self.id, self.test_type, self.seq_num, self.test_id, self.batch_id, self.name, self.val, self.desc)
 
                     return s
-
+                
+                '''
+                TableLine function, returns array of all relavant object parameters.
+                '''
                 def TableLine(self):
                     line = [self.id,self.test_type,self.test_id,self.batch_id,self.name,self.val,self.desc]
                     return line
 
+                '''
+                TableHeader function, returns array of all relavant object parameter names in string format.
+                '''                              
                 def TableHeader(self):
                     header = ['id','test_type','test_id','batch_id','parameter name','value','description']
                     return header
 
-
+        '''
+        The Test class provides the python object representation of the Test table 
+        found within the sql database.
+        '''
 	class Test(Base): 
 		__tablename__ = 'test'
 
@@ -151,24 +206,35 @@ class PyDB():
                 data_count = Column(Integer)
                 data_header = Column(String(1024))
 
+                '''
+                Python length function, allows support for len(type Statistic) operations
+                '''
                 def __len__(self):
                     return 9
 
+                '''
+                Python repr function, returns formatted string when str(type Test) is called
+                '''
                 def __repr__(self):
                     s =  "<Test(id='%d', batch_id='%d', name='%s', result='%s', description='%s')>" % (
                          self.id, self.batch_id, self.name, self.result, self.desc)
 
                     return s
-
+                
+                '''
+                TableLine function, returns array of all relavant object parameters.
+                '''
                 def TableLine(self):
                     line = [self.id,self.start_datetime.strftime("%m:%d:%y-%H:%M:%S"),self.end_datetime.strftime("%m:%d:%y-%H:%M:%S"),self.batch_id,self.name,self.desc,self.result,self.data_count]
                     return line
 
+                '''
+                TableHeader function, returns array of all relavant object parameter names in string format.
+                '''
                 def TableHeader(self):
                     header = ['id','start_datetime','end_datetime','batch_id','Test Name','Test Description','Test Result','Data Count']
                     return header
 
 
 	
-if __name__ == "__main__":
-    print "hello"
+
