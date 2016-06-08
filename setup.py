@@ -8,4 +8,9 @@ setup(name='pytest',
       author_email='john.f.dawson20@gmail.com',
       license='MIT',
       packages=['pytest'],
+      install_requires=[
+        'terminaltables',
+        'sqlalchemy',
+        'xlsxwriter',
+      ],
       zip_safe=False)
