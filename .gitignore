@@ -1,5 +1,6 @@
 pytest.egg-info/
 build/
+dist/
 # Object files
 *.o
 *.ko
