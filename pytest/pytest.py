@@ -12,7 +12,6 @@ from terminaltables import AsciiTable
 
 #csv import
 import csv 
-import xlsxwriter
 
 class PyTest(): 
 	def __init__(self,name,desc,res='not_available',batch=-1):
@@ -166,9 +165,6 @@ class PyTest():
 
             return table 
 
-
-        
-
         def DisplayTestResults(self):
             print "Printing Test Results\n"
             print "-------- Test Information --------"
@@ -194,63 +190,6 @@ class PyTest():
             print atable.table
                     
 
-            return 0
-
-        def ExportCSV(self,base='./data'):
-            #make local csv directory if it doesnt exist 
-            if not os.path.exists(base): 
-                os.makedirs(base)
-
-            testBase = base+'/'+self.startDateTime.strftime("%m:%d:%y-%H:%M:%S")+'_'+self.name
-            #print testBase
-            if not os.path.exists(testBase): 
-                os.makedirs(testBase)
-
-            #print testBase
-
-            datafile    = testBase+'/DATA.csv'
-            paramsfile  = testBase+'/PARAMS.csv'
-            statsfile  = testBase+'/STATS.csv'
-
-            with open(datafile,'w') as cfile:
-                writer = csv.writer(cfile)
-                rows = self.GetDataTable()
-                for row in rows: 
-                    writer.writerow(row)
-
-            with open(paramsfile,'w') as cfile:
-                writer = csv.writer(cfile)
-                rows = self.GetParamsTable()
-                for row in rows: 
-                    writer.writerow(row)
-
-            with open(statsfile,'w') as cfile:
-                writer = csv.writer(cfile)
-                rows = self.GetStatsTable()
-                for row in rows: 
-                    writer.writerow(row)
-            return 0
-
-        def ExportExcel(self,base='./data'):
-            #make local csv directory if it doesnt exist 
-            if not os.path.exists(base): 
-                os.makedirs(base)
-
-            testBase = base+'/'+self.startDateTime.strftime("%m:%d:%y-%H:%M:%S")+'_'+self.name
-            #print testBase
-            if not os.path.exists(testBase): 
-                os.makedirs(testBase)
-
-            #print testBase
-
-            excelfile    = testBase+'/DATA.csv'
-
-            test = self.GetTestTable()
-            data = self.GetDataTable()
-            params = self.GetParamsTable()    
-            stats = self.GetStatsTable()
-                
-            
             return 0
 
 #example case            
