@@ -72,10 +72,11 @@ class PyDB():
 		name	  = Column(String(250)) 		
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
-               
+
+                test = relationship("Test",back_populates="parameters")
                 def __len__(self):
                     return 7
-                
+                               
                 '''
                 Python repr function, returns formatted string when str(type Test) is called
                 '''
@@ -113,6 +114,7 @@ class PyDB():
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
 
+                test = relationship("Test",back_populates="statistics")
                 '''
                 Python length function, allows support for len(type Statistic) operations
                 '''
@@ -159,6 +161,7 @@ class PyDB():
 		val	  = Column(String(250)) 		
 		desc	  = Column(String(250)) 		
                 
+                test = relationship("Test",back_populates="data")
                 '''
                 Python length function, allows support for len(type Statistic) operations
                 '''       
@@ -205,6 +208,10 @@ class PyDB():
 		result     = Column(String(250))
                 data_count = Column(Integer)
                 data_header = Column(String(1024))
+
+                statistics = relationship("Statistic",back_populates="test")
+                parameters = relationship("Parameter",back_populates="test")
+                data       = relationship("Data",back_populates="test")
 
                 '''
                 Python length function, allows support for len(type Statistic) operations

@@ -174,7 +174,11 @@ class PyTest():
             name    - String: Name of Parameter to Delete
         '''
         def UpdateStatistic(self,name,val):
-            tmp = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId).filter_by(name=name).update({"val":val})
+            #tmp = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId).filter_by(name=name).update({"val":val})
+            for stats in self.testEntry.statistics:
+                if stats.name == name: 
+                    stats.val = val 
+
             return 0
         
         '''
@@ -202,28 +206,28 @@ class PyTest():
         GetParams Function: Get all Parameters in Session
         '''
         def GetParams(self):
-            params = self.db.session.query(self.db.Parameter).filter_by(test_id=self.testEntryId)
+            params = self.testEntry.parameters #self.db.session.query(self.db.Parameter).filter_by(test_id=self.testEntryId)
             return params
         
         '''
         GetStats Function: Get all Stats in Session
         '''
         def GetStats(self):
-            stats = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId)
+            stats = self.testEntry.statistics #self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId)
             return stats
         
         '''
         GetTestInfo Function: Get Test Entry for Session
         '''
         def GetTestInfo(self):
-            test = self.db.session.query(self.db.Test).filter_by(id=self.testEntryId)
+            test = [self.testEntry] #self.db.session.query(self.db.Test).filter_by(id=self.testEntryId)
             return test
         
         '''
         GetData Function: Get all Data Entries in Session
         '''
         def GetData(self):
-            data = self.db.session.query(self.Data).filter_by(test_id=self.testEntryId)
+            data = self.testEntry.data #self.db.session.query(self.Data).filter_by(test_id=self.testEntryId)
             return data
        
         '''

@@ -48,13 +48,58 @@ class PyQuery():
         
         #grab all tests in database 
         tests = self.db.session.query(self.db.Test)
-        
+        print tests
         #cross table filtering
-        #if(params != None):
-        #    tests 
-        #if(stats != None):
+        if(params != None and len(params) == 3):
+            tests = tests.join(self.db.Parameter).filter(self.db.Parameter.name==params[0]) 
+            if(params[1] == 'equal'):
+                tests = tests.filter(self.db.Parameter.val==params[2])
 
-       
+            elif(params[1] == 'greater'):
+                tests = tests.filter(self.db.Parameter.val>params[2])
+
+            elif(params[1] == 'less'):
+                tests = tests.filter(self.db.Parameter.val<params[2])
+
+            elif(params[1] == 'greater_equal'):
+                tests = tests.filter(self.db.Parameter.val>=params[2])
+
+            elif(params[1] == 'less_equal'):
+                tests = tests.filter(self.db.Parameter.val<=params[2])
+
+            elif(params[1] == 'not_equal'):
+                tests = tests.filter(self.db.Parameter.val!=params[2])
+
+            else: 
+                print "Unsupported compare operator: ",params[1]
+                return []
+
+        if(stats != None and len(stats) == 3):
+            tests = tests.join(self.db.Statistic).filter(self.db.Statistic.name==stats[0]) 
+            if(stats[1] == 'equal'):
+                tests = tests.filter(self.db.Statistic.val==stats[2])
+
+            elif(stats[1] == 'greater'):
+                tests = tests.filter(self.db.Statistic.val>stats[2])
+
+            elif(stats[1] == 'less'):
+                tests = tests.filter(self.db.Statistic.val<stats[2])
+
+            elif(stats[1] == 'greater_equal'):
+                tests = tests.filter(self.db.Statistic.val>=stats[2])
+
+            elif(stats[1] == 'less_equal'):
+                tests = tests.filter(self.db.Statistic.val<=stats[2])
+
+            elif(stats[1] == 'not_equal'):
+                tests = tests.filter(self.db.Statistic.val!=stats[2])
+
+            else: 
+                print "Unsupported compare operator: ",stats[1]
+                return []
+
+
+        print tests
         #filter tests by id, date, time, and result 
         if (id != None):
             tests = tests.filter(self.db.Test.id == id)
@@ -70,8 +115,8 @@ class PyQuery():
         if (result != None): 
             tests = tests.filter(self.db.Test.result == result)          
                           
-        
-        return tests
+        print tests        
+        return tests.all()
 
     '''
     DisplayTests Function: Displays test info for all test entries in an asciitables
@@ -749,9 +794,12 @@ if __name__ == "__main__":
     parent_parser.add_argument('-d', '--database', dest='srcDatabase', help='Target Database to Query', required=True)
     parent_parser.add_argument('-n', '--testname', dest='testName', help='Test Name to Query', default=None)
     parent_parser.add_argument('-i', '--id', dest='id', help='Specific Test ID to Query', default=None)
-    parent_parser.add_argument('-s', '--startdatetime', dest='startDateTime', help='Start Date Range to Search', default=None)
+    parent_parser.add_argument('-b', '--startdatetime', dest='startDateTime', help='Start Date Range to Search', default=None)
     parent_parser.add_argument('-e', '--enddatetime', dest='endDateTime', help='End Date Range to Search', default=None)
     parent_parser.add_argument('-r', '--result', dest='resultType', help='Result Type to Filter By', default=None)   
+    parent_parser.add_argument('-p', '--parameters', dest='params', help='Param,Value,Operation Pair to Filter By (e.g p 10 >)', nargs=3, default=None)   
+    parent_parser.add_argument('-s', '--statistics', dest='stats', help='Stat,Value,Operation Pair to Filter By (e.g p 10 >)', nargs=3,default=None)   
+    
     subparsers = parent_parser.add_subparsers(dest='command')
 
     #list function subparser
@@ -773,7 +821,8 @@ if __name__ == "__main__":
     export_parser.add_argument('-s', '--server', dest='dbHost', help='New Database Host', default=None)   
     
     args = parent_parser.parse_args()
-    
+    print args.params
+
     if (args.srcDatabase == None):
         print "No Database Provided, Exiting"
         sys.exit()
@@ -785,7 +834,9 @@ if __name__ == "__main__":
     myQuery = PyQuery(args.srcDatabase)
 
     #get queries 
-    tests = myQuery.GetTests(id=args.id,startDateTime=args.startDateTime,endDateTime=args.endDateTime,result=args.resultType)
+    tests = myQuery.GetTests(id=args.id,startDateTime=args.startDateTime,\
+                             endDateTime=args.endDateTime,result=args.resultType,\
+                             params=args.params, stats=args.stats)
 
     if (args.command == 'list'):   
         myQuery.DisplayTests(tests)
