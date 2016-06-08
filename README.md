@@ -9,25 +9,25 @@ pyquery.py
 
 
 pydb.py - PyDB Class: 
-Interface/Wrapper around SQL Test Database 
-Creates and returns database connection 
-Defines table types used
-Creates tables if required 
+Interface/Wrapper around SQL Test Database, 
+Creates and returns database connection,
+Defines table types used,
+Creates tables if required, 
 
 pytest.py - PyTest Class: 
-Main module for creating python tests
-Creation of test object
-Creation of test parameters, statistics, and data 
-Commiting test data to database 
+Main module for creating python tests,
+Creation of test object,
+Creation of test parameters, statistics, and data, 
+Commiting test data to database, 
 
 pyquery.py - PyQuery Class:
-Main module/application for querying and displaying test data 
-Connecting to a database
-Filtering tests 
-Viewing test entries 
-Displaying test logs 
-Exporting test records in a variety of formats 
-Pushing local test data to remote databases 
+Main module/application for querying and displaying test data, 
+Connecting to a database,
+Filtering tests,
+Viewing test entries, 
+Displaying test logs,
+Exporting test records in a variety of formats, 
+Pushing local test data to remote databases, 
 
 
 # Getting Started 
