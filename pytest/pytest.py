@@ -177,7 +177,10 @@ class PyTest():
             #tmp = self.db.session.query(self.db.Statistic).filter_by(test_id=self.testEntryId).filter_by(name=name).update({"val":val})
             for stats in self.testEntry.statistics:
                 if stats.name == name: 
-                    stats.val = val 
+                    stats.val = val
+                    return 0
+            
+            self.CreateStatistic(name,val,'')
 
             return 0
         

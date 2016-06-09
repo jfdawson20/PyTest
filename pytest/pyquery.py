@@ -246,6 +246,8 @@ class PyQuery():
         test = self.GetTestInfo(testId) 
         dc = test[0].data_count 
         table = []
+        if(test[0].data_header==None):
+            return [[]]
         header = (test[0].data_header.split(" "))
         table.append(header)
         for i in range(dc):
@@ -278,6 +280,17 @@ class PyQuery():
 	Arguments
 		test - test object 
     '''
+
+    def DeleteTestEntrys(self,tests):
+        for t in tests: 
+            self.db.session.query(self.db.Data).filter(self.db.Data.test_id == t.id).delete()
+            self.db.session.query(self.db.Statistic).filter(self.db.Statistic.test_id == t.id).delete()
+            self.db.session.query(self.db.Parameter).filter(self.db.Parameter.test_id == t.id).delete()
+            self.db.session.query(self.db.Test).filter(self.db.Test.id == t.id).delete()
+            
+            self.db.session.commit()
+
+
     def DisplayTestResults(self,test):
         print "Printing Test Results\n"
         print "-------- Test Information --------"
@@ -321,6 +334,18 @@ class PyQuery():
 
         for t in tests:
             stats = self.GetStats(t.id)
+            
+            #check all stats are currently in minstats 
+            for s in stats: 
+                found = 0
+                for m in minstats:
+                    if (s.name == m[1]):
+                        found = 1
+
+                if(found == 0):
+                    x = (t.id,s.name,s.val)
+                    minstats.append(x)
+
             i = 0
             for s in stats:
                 x = (t.id,s.name,s.val)
@@ -348,6 +373,17 @@ class PyQuery():
 
         for t in tests:
             stats = self.GetStats(t.id)
+            #check all stats are currently in minstats 
+            for s in stats: 
+                found = 0
+                for m in maxstats:
+                    if (s.name == m[1]):
+                        found = 1
+
+                if(found == 0):
+                    x = (t.id,s.name,s.val)
+                    maxstats.append(x)
+
             i = 0
             for s in stats:
                 x = (t.id,s.name,s.val)
@@ -453,9 +489,10 @@ class PyQuery():
         dataSheet=[]
         i = 0
         for t in tests:
-            dataSheet.append(workbook.add_worksheet('data_'+str(t.id)))
-            dataSheet[i].set_column(0,100,15)
-            i+=1 
+            if(t.data_header !=None):
+                dataSheet.append(workbook.add_worksheet('data_'+str(t.id)))
+                dataSheet[i].set_column(0,100,15)
+                i+=1 
 
         hrow = 0
         hcol = 0
@@ -588,19 +625,20 @@ class PyQuery():
         #write data sheets
         i = 0
         for t in tests:
-            data = self.GetDataTable(t.id)
-            for d in data:
-                dcol = 0
-                for field in d:
-                    dataSheet[i].write(drow,dcol,field) 
-                    dcol +=1
+            if (t.data_header !=None):
+                data = self.GetDataTable(t.id)
+                for d in data:
+                    dcol = 0
+                    for field in d:
+                        dataSheet[i].write(drow,dcol,field) 
+                        dcol +=1
             
-                drow+=1
+                    drow+=1
             
     
-            drow = 0
-            dcol = 0
-            i+=1 
+                drow = 0
+                dcol = 0
+                i+=1 
         
         if(gtype != None):
             chart = workbook.add_chart({'type':gtype})
@@ -819,6 +857,8 @@ if __name__ == "__main__":
     export_parser.add_argument('-p', '--password', dest='dbPass', help='New Database Password', default=None)
     export_parser.add_argument('-s', '--server', dest='dbHost', help='New Database Host', default=None)   
     
+    delete_parser = subparsers.add_parser("delete",help="delete help")  
+
     args = parent_parser.parse_args()
 
     if (args.srcDatabase == None):
@@ -863,3 +903,5 @@ if __name__ == "__main__":
             newdb = PyDB(args.dbName,dbtype=args.dbType,user=args.dbUser,password=args.dbPass,host=args.dbHost)
             myQuery.ExportDB(newdb)
 
+    elif(args.command == 'delete'):
+        myQuery.DeleteTestEntrys(tests)
