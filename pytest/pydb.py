@@ -26,6 +26,7 @@ class PyDB():
                 #setup database connection and session 
                 if (dbtype ==  'sqlite'):
 		    self.engine = create_engine('sqlite:///' + name + '.db', echo=False)
+                
                 elif (dbtype == 'mysql'):
                     self.engine = create_engine('mysql://'+user+':'+password+'@'+host)
                     databases = self.engine.execute("SHOW DATABASES;")
@@ -35,6 +36,9 @@ class PyDB():
                         self.engine.execute("CREATE DATABASE "+name) #create db
                     
                     self.engine.execute("USE "+name) # select new db
+
+                elif (dbtype == 'memory'):
+                    self.engine = create_engine('sqlite://')
 
 		self.Session = sessionmaker()
 		self.Session.configure(bind=self.engine)

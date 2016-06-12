@@ -333,8 +333,8 @@ if __name__ == "__main__":
     dataHeader = ["timestamp","nfp_temp","nfp_power","card_power","system_power","hello","11111111","22222222","333333333"]
     mytest.SetDataHeader(dataHeader)
 
-    #r = int(random.random()*100)
-    for i in range(100000):
+    r = int(random.random()*100)
+    for i in range(1000):
         rand = random.random()
 
         timestamp = rand
