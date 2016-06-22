@@ -35,6 +35,18 @@ DisplayTests : Display test records in asciitable format
 class PyQuery(): 
     def __init__(self,name,dbtype='sqlite',user=None,password=None,host=None):
         self.db = PyDB(name=name,dbtype=dbtype,user=user,password=password,host=host)
+        
+    #progress bar update and draw function
+    def drawProgressBar(self,percent, barLen):
+        sys.stdout.write("\r")
+        progress = ""
+        for i in range(barLen):
+            if i < int(barLen * percent):
+                progress += "="
+            else:
+                progress += " "
+        sys.stdout.write("[ %s ] %.2f%%" % (progress, percent * 100))
+        sys.stdout.flush()
     
     """
     GetTests Function: Main function for gathering and filtering test results from database 
@@ -231,12 +243,18 @@ class PyQuery():
     def GetStatsTable(self,testId):
         table = []
         stats = self.GetStats(testId)
-        table.append(stats[0].TableHeader())
+        
+        if stats.count() == 0:
+            return [[]]
+    
+        else:
+            print 'in else'
+            table.append(stats[0].TableHeader())
 
-        for s in stats: 
-            table.append(s.TableLine())
+            for s in stats: 
+                table.append(s.TableLine())
 
-        return table 
+            return table 
         
     '''
     GetDataTable Function: Returns a 2D list of all data entrys in test, organized by sequence number 
@@ -488,6 +506,7 @@ class PyQuery():
         #each sheet tagged with run id number
         dataSheet=[]
         i = 0
+
         for t in tests:
             if(t.data_header !=None):
                 dataSheet.append(workbook.add_worksheet('data_'+str(t.id)))
@@ -510,7 +529,11 @@ class PyQuery():
         
         print "Writing Summary Sheet\n"
         #write summary sheete
+        currenttest = 1
+        totallen = len(tests)
         for t in tests:
+            self.drawProgressBar(float(currenttest)/float(totallen), barLen = 30)
+            currenttest+=1
             scol = 0
             testFields = t.TableHeader()
             testInfo   = t.TableLine()
@@ -560,9 +583,13 @@ class PyQuery():
         highlightSheet.set_column(hcol,hcol+max(len(ret[1]),len(ret[2]),len(ret[3])),20)
         hrow+=1 
 
-        print "Writing Highlights\n"
+        print "\nWriting Highlights\n"
         #write number of tests
         table = [["Number of Tests",ret[0]]]
+        
+        print "Writing Test Stats\n"
+        currenttest = 1
+        totallen = len(tests)
         for x in table:
             hcol=0
             for y in x:
@@ -575,6 +602,9 @@ class PyQuery():
 
         #write min stats
         table = [["Minimum Statistic","Value","Run"]]
+        print "\nWriting Min Stats\n"
+        currenttest = 1
+        totallen = len(tests)
         for results in ret[1]:
             row = [results[1],results[2],results[0]]
             table.append(row)
@@ -591,6 +621,9 @@ class PyQuery():
     
         #write max stats
         table = [["Maximum Statistic","Value","Run"]]
+        print "\nWriting Max Stats\n"
+        currenttest = 1
+        totallen = len(tests)
         for results in ret[2]:
             row = [results[1],results[2],results[0]]
             table.append(row)
@@ -607,6 +640,9 @@ class PyQuery():
         
         #write results summary
         table = [["Result Type","Count"]]
+        print "\nWriting Results Summary\n"
+        currenttest = 1
+        totallen = len(tests)
         for results in ret[3]:
             row = [results[0],results[1]]
             table.append(row)
@@ -621,10 +657,14 @@ class PyQuery():
         hrow+=1
         hcol=0
 
-        print "Writing Data Pages\n"
+        print "\nWriting Data Pages\n"
         #write data sheets
         i = 0
+        currenttest = 1
+        totallen = len(tests)
         for t in tests:
+            self.drawProgressBar(float(currenttest)/float(totallen), barLen = 30)
+            currenttest+=1
             if (t.data_header !=None):
                 data = self.GetDataTable(t.id)
                 for d in data:
@@ -687,13 +727,14 @@ class PyQuery():
             graphSheet.insert_chart('A7',chart)    
 
         workbook.close()
-        print "Export Completed\n"
+        print "\nExport Completed\n"
         
 
         '''
         ExportExcel: Produces a seperate excel file per test in test
         '''
     def ExportExcel(self,test,base='./data'):
+        print "in excel"
         #make local csv directory if it doesnt exist 
         if not os.path.exists(base): 
             os.makedirs(base)
@@ -771,6 +812,8 @@ class PyQuery():
         for t in data:
             dcol = 0
             for field in t:
+                if field.find(' ') >= 0:
+                    field.replace(' ','_')
                 dataSheet.write(drow,dcol,field) 
                 dcol +=1
             

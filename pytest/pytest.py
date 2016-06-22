@@ -240,6 +240,9 @@ class PyTest():
         def GetParamsTable(self): 
             table = []
             params = self.GetParams()
+            if params == []:
+                return []
+
             table.append(params[0].TableHeader())
             for p in params:
                 table.append(p.TableLine())
@@ -253,6 +256,9 @@ class PyTest():
         def GetStatsTable(self):
             table = []
             stats = self.GetStats()
+        
+            if stats == []:
+                return []
             table.append(stats[0].TableHeader())
             for s in stats: 
                 table.append(s.TableLine())
