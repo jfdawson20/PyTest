@@ -524,8 +524,8 @@ class PyQuery():
 
 
         merge_format = workbook.add_format({'align': 'center'})
-        summarySheet.merge_range(srow,scol,srow,scol+smaxcols,'TEST SUMMARY',merge_format)
-        srow+=1
+        #summarySheet.merge_range(srow,scol,srow,scol+smaxcols,'TEST SUMMARY',merge_format)
+        #srow+=1
         
         print "Writing Summary Sheet\n"
         #write summary sheete
@@ -541,7 +541,7 @@ class PyQuery():
             stats      = self.GetStats(t.id)
     
             line =[]
-            if(srow == 1):
+            if(srow == 0):
                 for field in testFields:
                     line.append(field)
 
