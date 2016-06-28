@@ -509,7 +509,7 @@ class PyQuery():
 
         for t in tests:
             if(t.data_header !=None):
-                dataSheet.append(workbook.add_worksheet('data_'+str(t.id)))
+                dataSheet.append(workbook.add_worksheet(str(t.id)))
                 dataSheet[i].set_column(0,100,15)
                 i+=1 
 
