@@ -27,14 +27,14 @@ class PyTest():
             password - String: Database Password if Requried - Defaults to None
             host     - String: Database Host Name if Required - Defaults to None
         '''
-	def __init__(self,name,desc,res='not_available',batch=-1,dbtype='sqlite',user=None,password=None,host=None):
+	def __init__(self,tname,dname,desc,res='not_available',batch=-1,dbtype='sqlite',user=None,password=None,host=None):
 
                 #Create connection to database
-                self.db = PyDB(name=name,dbtype=dbtype,user=user,password=password,host=host)
+                self.db = PyDB(name=dname,dbtype=dbtype,user=user,password=password,host=host)
 
                 #create test entry 
                 self.startDateTime = datetime.datetime.now()
-                self.testEntry = self.db.Test(name=name,batch_id=batch,desc=desc,result=res,start_datetime=self.startDateTime,data_count=0)
+                self.testEntry = self.db.Test(name=tname,batch_id=batch,desc=desc,result=res,start_datetime=self.startDateTime,data_count=0)
 
                 #add new entry to current session (but dont commit!)
                 self.db.session.add(self.testEntry)
